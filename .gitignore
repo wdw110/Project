@@ -12,3 +12,4 @@
 *.swo
 .DS_Store
 *.gz
+*.pkl
