@@ -35,7 +35,8 @@ from keras.models import load_model
 img_rows, img_cols = 28, 28
 
 #the data, shuffled and split between train and test sets
-(X_train, y_train), (X_test, y_test) = mnist.load_data()
+path = os.path.join(os.getcwd(),'mnist_little.pkl.gz')
+(X_train, y_train), (X_test, y_test) = mnist.load_data(path)
 
 X_train = X_train.reshape(X_train.shape[0], 1, img_rows, img_cols)
 Shape=X_train.shape[1:]
