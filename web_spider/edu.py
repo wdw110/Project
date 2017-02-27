@@ -27,7 +27,7 @@ class Edu(object):
 
 	def getdate(self):
 		now = datetime.datetime.now()
-		aDay = datetime.timedelta(days=-14)
+		aDay = datetime.timedelta(days=-2)
 		now = now + aDay
 		self.dateline = now.strftime('%Y-%m-%d')
 
@@ -209,11 +209,11 @@ class Send(object):
 
 
 		sender = 'wudw110@163.com'
-		receivers = 'hongweiwei923@163.com' # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
+		receivers = ['hongweiwei923@163.com','wudw110@163.com'] # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
 
 		message = MIMEText(self.msg, 'plain', 'utf-8')
 		message['From'] = self.format_addr(u'吴大维 <%s>' % sender)
-		message['To'] =  self.format_addr(u'Hww <%s>' % receivers)
+		message['To'] =  self.format_addr(u'Hww <%s>' % receivers[0])
 
 		subject = '\xf0\x9f\x92\x93\xf0\x9f\x92\x91'+'招聘信息每日推送'+'\xf0\x9f\x92\x95\xf0\x9f\x92\x9c'
 		message['Subject'] = Header(subject, 'utf-8')
@@ -223,7 +223,7 @@ class Send(object):
 			smtpObj = smtplib.SMTP() 
 			smtpObj.connect(mail_host, 25)    # 25 为 SMTP 端口号
 			smtpObj.login(mail_user,mail_pass) 
-			smtpObj.sendmail(sender, [receivers], message.as_string())
+			smtpObj.sendmail(sender, receivers, message.as_string())
 			print "邮件发送成功"
 		except smtplib.SMTPException as e:
 			print e
@@ -234,11 +234,14 @@ if __name__ == '__main__':
 	a.all(urls)
 	news = a.data
 	news = sorted(news, key=lambda x:x[2], reverse=True)
-	msg = '标题\t网址\t日期\n'
-	for infor in news:
-		msg += '-'*40+'\n'
-		msg += '\t'.join(infor) + '\n'
-	msg += '\xf0\x9f\x92\x96'*10 + 'Created by: wdw110' + '\xf0\x9f\x92\x96'*10
+	if len(news):
+		msg = '标题\t网址\t日期\n'
+		for infor in news:
+			msg += '-'*40+'\n'
+			msg += '\t'.join(infor) + '\n'
+	else:
+		msg = '💖今天没有招聘信息更新，你要努力准备...💕\n\n'
+	msg += '\xf0\x9f\x92\x96'*10 + '\nCreated by: wdw110\n' + '\xf0\x9f\x92\x96'*10
 	hww = Send(msg)
 	hww.send_email()
 		
