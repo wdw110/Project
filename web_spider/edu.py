@@ -27,7 +27,7 @@ class Edu(object):
 
 	def getdate(self):
 		now = datetime.datetime.now()
-		aDay = datetime.timedelta(days=-2)
+		aDay = datetime.timedelta(days=-3)
 		now = now + aDay
 		self.dateline = now.strftime('%Y-%m-%d')
 
@@ -49,7 +49,7 @@ class Edu(object):
 				con_obj = con.select('a')[0].attrs
 				url = base + con_obj['href']
 				title = con_obj['title'].encode('utf-8')
-				if date > self.dateline and '招聘' in title:
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
 					self.data.append((title,url,date))
 
 		def sc(url=u_arr[1]):
@@ -64,7 +64,7 @@ class Edu(object):
 				url,title,date = re.findall(pat, con)[0]
 				url = base + url
 				date = year + '-' + date
-				if date > self.dateline and '招聘' in title:
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
 					self.data.append((title,url,date))
 
 		def bj(url=u_arr[2]):
@@ -74,7 +74,7 @@ class Edu(object):
 				url = con.select('span.bt a')[0].attrs['href']
 				title = con.select('span.bt')[0].string.encode('utf-8')
 				date = str(con.select('span.time')[0].string)
-				if date > self.dateline and '招聘' in title:
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
 					self.data.append((title,url,date))
 			
 		def xc(url=u_arr[3]):
@@ -88,7 +88,7 @@ class Edu(object):
 				url = base + cons[i][0]
 				title = cons[i][1]
 				date = '20' + date_list[i]
-				if date > self.dateline and '招聘' in title:
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
 					self.data.append((title,url,date))
 
 		def xs(url=u_arr[4]):
@@ -101,7 +101,7 @@ class Edu(object):
 				title = cons[i].a.string.encode('utf-8')
 				date = re.findall('\d{4}-\d{1,2}-\d{1,2}',date_list[i].string.encode('utf-8'))[0]
 				date = (datetime.datetime.strptime(date,'%Y-%m-%d')).strftime('%Y-%m-%d')
-				if date > self.dateline and '招聘' in title:
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
 					self.data.append((title,url,date))
 
 		def jg(url=u_arr[5]):
@@ -113,7 +113,7 @@ class Edu(object):
 				url,title = re.findall('<a style=" font-family.*?href=\'(.*?)\'.*?title=\'(.*?)\'',con)[0]
 				date = re.findall('<span style="float:right;.*?>(.*?)</span>',con)[0]
 				url = base + url
-				if date > self.dateline and '招聘' in title:
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
 					self.data.append((title,url,date))
 
 		def gs(url=u_arr[6]):
@@ -127,7 +127,7 @@ class Edu(object):
 				title = con_obj['title'].encode('utf-8')
 				date = re.sub('年|月','-',date_list[i].string.strip("[,]").encode('utf-8')).strip('日')
 				date = (datetime.datetime.strptime(date,'%Y-%m-%d')).strftime('%Y-%m-%d')
-				if date > self.dateline and '招聘' in title:
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
 					self.data.append((title,url,date))
 
 		def xh(url=u_arr[7]):
@@ -144,7 +144,7 @@ class Edu(object):
 					url = base + url
 				title = re.findall('title=\'(.*?)\'',con)[0]
 				date = year + '-' + re.findall('\[(\d{2}-\d{2})\]',con)[0]
-				if date > self.dateline and '招聘' in title:
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
 					self.data.append((title,url,date))
 
 		def xias(url=u_arr[8]):
@@ -156,7 +156,7 @@ class Edu(object):
 				url = base + con.a.attrs['href']
 				title = con.a.string.encode('utf-8')
 				date = year + '-' + con.select('td[width="21%"]')[0].string.encode('utf-8')
-				if date > self.dateline and '招聘' in title:
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
 					self.data.append((title,url,date))
 
 		def djd(url=u_arr[9]):
@@ -182,7 +182,7 @@ class Edu(object):
 				url = base + con_obj['href']
 				title = con_obj['title'].encode('utf-8')
 				date = re.findall('\d{4}-\d{2}-\d{2}',date_list[i].encode('utf-8'))[0]
-				if date > self.dateline and '招聘' in title:
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
 					self.data.append((title,url,date))
 
 		hz();sc();bj();xc();xs();jg()
