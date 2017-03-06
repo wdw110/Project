@@ -16,7 +16,7 @@ from email.mime.text import MIMEText
 from email.header import Header
 from email.utils import parseaddr, formataddr
 
-urls = ['http://www.hzedu.gov.cn/sites/main/template/list.aspx?Id=56&classid=3','http://www.hzscjy.com/','http://www.bjqjyj.cn/lmnew_list.aspx?flag=2','http://www.hxjy.com/cms/app/info/cat/index.php/20','http://www.xsedu.zj.cn/sites/main/template/list.aspx?id=252','http://www.jgedu.net/col/col1410/index.html','http://www.gsjy.net/sites/xxgk/template/list.aspx?Id=125','http://jyj.hzxh.gov.cn/col/col1217310/index.html','http://www.xiashaedu.com/ineduportal/Components/news/infoListWap.aspx?id=1383','http://www.djdedu.net/index.php/zszp','http://www.yhjy.gov.cn/Class/class_94/index.html']
+urls = ['http://www.hzedu.gov.cn/sites/main/template/list.aspx?Id=56&classid=3','http://www.hzscjy.com/','http://www.bjqjyj.cn/lmnew_list.aspx?flag=2','http://www.hxjy.com/cms/app/info/cat/index.php/20','http://www.xsedu.zj.cn/sites/main/template/list.aspx?id=252','http://www.jgedu.net/col/col1410/index.html','http://www.gsjy.net/sites/xxgk/template/list.aspx?Id=125','http://jyj.hzxh.gov.cn/col/col1217310/index.html','http://www.xiashaedu.com/ineduportal/Components/news/infoListWap.aspx?id=1383','http://www.djdedu.net/index.php/zszp','http://www.yhjy.gov.cn/Class/class_94/index.html','http://www.wenwu8.com/news/news_37.html']
 
 class Edu(object):
 	"""docstring for Edu"""
@@ -32,40 +32,51 @@ class Edu(object):
 		self.dateline = now.strftime('%Y-%m-%d')
 
 	def getcontent(self,url):
-		headers = {'User-Agent':"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1"}##浏览器请求头（大部分网站没有这个请求头会报错、请务必加上哦）
+		headers = {'User-Agent':"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36"}##浏览器请求头（大部分网站没有这个请求头会报错、请务必加上哦）
 		response = requests.get(url, headers=headers)
-		con = response.content
+		find = re.findall('<meta.*?charset=(.*?)>',response.content)
+		if len(find):
+			encode = re.findall('utf-8|gb2312|gbk|gb10803',find[0])[0]
+			if response.encoding == 'ISO-8859-1':
+				response.encoding = encode
+		con = response.text.encode('utf-8')
 		return con
 
 	def all(self, u_arr):
 		def hz(url=u_arr[0]):
 			base = 'http://www.hzedu.gov.cn'
-			content = BeautifulSoup(self.getcontent(url), 'lxml')
+			content = BeautifulSoup(self.getcontent(url), 'html.parser')
 			cons = content.select('ul.shownews tr.shownewstd')
 			for con in cons:
 				pattern = re.compile('\d{4}-\d{1,2}-\d{1,2}',re.S)
 				date = re.findall(pattern, str(con.select('td[style="padding-right:3px;text-align:right;color:#999999;font-size:12px;"]')))[0]
 				date = (datetime.datetime.strptime(date,'%Y-%m-%d')).strftime('%Y-%m-%d')
 				con_obj = con.select('a')[0].attrs
-				url = base + con_obj['href']
+				url = base + str(con_obj['href'])
 				title = con_obj['title'].encode('utf-8')
 				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
-					self.data.append((title,url,date))
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
+
 
 		def sc(url=u_arr[1]):
 			year = str(time.localtime().tm_year)
-			base = 'http://www.hzscjy.com/'
-			html = self.getcontent(url)
-			pattern = re.compile('<li>(.*?)</li>', re.S)
-			cons = re.findall(pattern, html)
+			base = 'http://www.hzscjy.com'
+			content = BeautifulSoup(self.getcontent(url), 'html.parser')
+			cons = content.select('li')
 			for con in cons:
-				con = con.decode('gb2312').encode('utf-8')
-				pat = re.compile('href="(.*?)".*?>(.*?)</a>.*?\[(.*?)\]', re.S)
-				url,title,date = re.findall(pat, con)[0]
-				url = base + url
+				url  = base + str(con.a['href'])
+				title = con.a.string.encode('utf-8')
+				date = re.findall('\[(\d{2}-\d{2})\]',str(con))[0]
 				date = year + '-' + date
 				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
-					self.data.append((title,url,date))
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
+
 
 		def bj(url=u_arr[2]):
 			content = BeautifulSoup(self.getcontent(url), 'lxml')
@@ -75,21 +86,27 @@ class Edu(object):
 				title = con.select('span.bt')[0].string.encode('utf-8')
 				date = str(con.select('span.time')[0].string)
 				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
-					self.data.append((title,url,date))
-			
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
+
+
 		def xc(url=u_arr[3]):
 			base = 'http://www.hxjy.com'
-			html = self.getcontent(url)
-			pattern1 = re.compile('<td class="tb_list_title".*?href="(.*?)".*?<div class="div ellipsis">(.*?)</div>')
-			pattern2 = re.compile('<td class="tb_list_more">(.*?)</td>')
-			cons = re.findall(pattern1,html)
-			date_list = re.findall(pattern2,html)
-			for i in range(len(cons)):
-				url = base + cons[i][0]
-				title = cons[i][1]
-				date = '20' + date_list[i]
+			content = BeautifulSoup(self.getcontent(url), 'lxml')
+			cons = content.select('table.tb_listOutPut > tr')[0:-1]
+			for con in cons:
+				tmp = con.select('.tb_list_title')[0]
+				url = base + tmp.a['href']
+				title = tmp.div.string.encode('utf-8')
+				date = '20' + con.select('.tb_list_more')[0].string.encode('utf-8')
 				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
-					self.data.append((title,url,date))
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
+
 
 		def xs(url=u_arr[4]):
 			base = 'http://www.xsedu.zj.cn'
@@ -102,7 +119,11 @@ class Edu(object):
 				date = re.findall('\d{4}-\d{1,2}-\d{1,2}',date_list[i].string.encode('utf-8'))[0]
 				date = (datetime.datetime.strptime(date,'%Y-%m-%d')).strftime('%Y-%m-%d')
 				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
-					self.data.append((title,url,date))
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
+
 
 		def jg(url=u_arr[5]):
 			base = 'http://www.jgedu.net'
@@ -114,21 +135,29 @@ class Edu(object):
 				date = re.findall('<span style="float:right;.*?>(.*?)</span>',con)[0]
 				url = base + url
 				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
-					self.data.append((title,url,date))
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
+
 
 		def gs(url=u_arr[6]):
 			base = 'http://www.gsjy.net'
-			content = BeautifulSoup(self.getcontent(url), 'lxml')
+			content = BeautifulSoup(self.getcontent(url), 'html.parser')
 			cons = content.select('td[height="25"]')
 			date_list = content.select('td[width="100"]')
 			for i in range(len(cons)):
 				con_obj = cons[i].a.attrs
-				url = base + con_obj['href']
+				url = base + str(con_obj['href'])
 				title = con_obj['title'].encode('utf-8')
 				date = re.sub('年|月','-',date_list[i].string.strip("[,]").encode('utf-8')).strip('日')
 				date = (datetime.datetime.strptime(date,'%Y-%m-%d')).strftime('%Y-%m-%d')
 				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
-					self.data.append((title,url,date))
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
+
 
 		def xh(url=u_arr[7]):
 			year = str(time.localtime().tm_year)
@@ -145,7 +174,11 @@ class Edu(object):
 				title = re.findall('title=\'(.*?)\'',con)[0]
 				date = year + '-' + re.findall('\[(\d{2}-\d{2})\]',con)[0]
 				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
-					self.data.append((title,url,date))
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
+
 
 		def xias(url=u_arr[8]):
 			year = str(time.localtime().tm_year)
@@ -157,36 +190,62 @@ class Edu(object):
 				title = con.a.string.encode('utf-8')
 				date = year + '-' + con.select('td[width="21%"]')[0].string.encode('utf-8')
 				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
-					self.data.append((title,url,date))
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
+
 
 		def djd(url=u_arr[9]):
 			base = 'http://www.djdedu.net'
-			html = self.getcontent(url)
-			pattern1 = re.compile("""<a target='_blank' \
-									title='(.*?)'.*href="(.*?)"\
-									""",re.S)
-			pattern2 = re.compile('<span>(\d{4}-\d{2}-\d{2})',re.S)
-			cons = re.findall(pattern1,html)
-			date_list = re.findall(pattern2,html)
-			#print cons
-			#for con in cons:
-			#	print con
+			content = BeautifulSoup(self.getcontent(url), 'lxml')
+			cons = content.select('div.list-box li')
+			for con in cons:
+				url = base + con.a['href'].encode('utf-8')
+				title = con.a['title'].encode('utf-8')
+				date = re.findall('<span>.*?(\d{4}-\d{2}-\d{2}).*?</span>',str(con))[0]
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
+
 
 		def yh(url=u_arr[10]):
 			base = 'http://www.yhjy.gov.cn'
-			content = BeautifulSoup(self.getcontent(url), 'lxml')
+			content = BeautifulSoup(self.getcontent(url), 'html.parser')
 			cons = content.select('td[align="left"] > a[target="_blank"]')
 			date_list = content.select('td[style="display: block; "]')
 			for i in range(len(cons)):
 				con_obj = cons[i].attrs
-				url = base + con_obj['href']
+				url = base + con_obj['href'].encode('utf-8')
 				title = con_obj['title'].encode('utf-8')
 				date = re.findall('\d{4}-\d{2}-\d{2}',date_list[i].encode('utf-8'))[0]
 				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
-					self.data.append((title,url,date))
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
 
-		hz();sc();bj();xc();xs();jg()
-		gs();xh();xias();djd();yh()
+
+		def ww(url=u_arr[11]):
+			base = 'http://www.wenwu8.com/'
+			html = self.getcontent(url)
+			content = BeautifulSoup(self.getcontent(url), 'html.parser')
+			cons = content.select('ul#listul li')
+			for con in cons:
+				url = base + con.a['href'].encode('utf-8')
+				title = con.a.string.encode('utf-8')
+				date = re.findall('\d{4}-\d{2}-\d{2}',str(con))[0]
+				if date >= self.dateline and len(re.findall('招聘|诚邀|诚聘',title)):
+					if len(re.findall('中小学',title)):
+						self.data.append((title,url,date))
+					if not len(re.findall('小学|淳安|幼儿|桐庐|富阳|临安|建德',title)):
+						self.data.append((title,url,date))
+
+
+		hz();sc();xc();xs();bj();jg()
+		gs();xh();xias();djd();yh();ww()
 		print '数据抓取完毕，正在发送邮件中...'
 
 
@@ -209,7 +268,7 @@ class Send(object):
 
 
 		sender = 'wudw110@163.com'
-		receivers = ['hongweiwei923@163.com','wudw110@163.com'] # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
+		receivers = ['wudw110@163.com']#['hongweiwei923@163.com','wudw110@163.com'] # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
 
 		message = MIMEText(self.msg, 'plain', 'utf-8')
 		message['From'] = self.format_addr(u'吴大维 <%s>' % sender)

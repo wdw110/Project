@@ -13,3 +13,7 @@
 .DS_Store
 *.gz
 *.pkl
+*.rar
+*.csv
+*.zip
+
