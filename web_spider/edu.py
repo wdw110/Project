@@ -268,7 +268,7 @@ class Send(object):
 
 
 		sender = 'wudw110@163.com'
-		receivers = ['wudw110@163.com']#['hongweiwei923@163.com','wudw110@163.com'] # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
+		receivers = ['hongweiwei923@163.com','wudw110@163.com'] # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
 
 		message = MIMEText(self.msg, 'plain', 'utf-8')
 		message['From'] = self.format_addr(u'吴大维 <%s>' % sender)
