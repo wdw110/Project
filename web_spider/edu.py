@@ -245,7 +245,7 @@ class Edu(object):
 
 
 		hz();sc();xc();xs();bj();jg()
-		gs();xh();xias();djd();yh();ww()
+		gs();xh();yh();ww()#;djd();xias()
 		print '数据抓取完毕，正在发送邮件中...'
 
 
@@ -263,12 +263,12 @@ class Send(object):
 	def send_email(self):
 		# 第三方 SMTP 服务
 		mail_host="smtp.163.com"  #设置服务器
-		mail_user="wudw110"    #用户名
-		mail_pass="Wdw1101627533"   #口令 
+		mail_user="hongweiwei923"    #用户名
+		mail_pass="www.640"   #口令 
 
 
-		sender = 'wudw110@163.com'
-		receivers = ['hongweiwei923@163.com','wudw110@163.com'] # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
+		sender = 'hongweiwei923@163.com'
+		receivers = ['hongweiwei923@163.com'] # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
 
 		message = MIMEText(self.msg, 'plain', 'utf-8')
 		message['From'] = self.format_addr(u'吴大维 <%s>' % sender)

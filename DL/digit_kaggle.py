@@ -108,7 +108,7 @@ model.compile(loss='categorical_crossentropy',
 
 # Fit
 model.fit(X_train, y_train, batch_size=batch_size,
-		  nb_epoch=epochs,
+		  nb_epoch=1,
 		  validation_data=(X_test,y_test),
 		  verbose=1)
 
@@ -138,5 +138,5 @@ model.load_weights('best.kerasModelWeights')
 Y_pred = model.predict_classes(d_pre)
 
 # Save the predicitions in Kaggle format
-np.savetxt("CNN_pred.csv", np.c_[range(1,len(d_pre)),Y_pred], delimiter=',', header = 'ImageId,Label', comments = '', fmt='%s')
+np.savetxt("CNN_pred.csv", np.c_[range(1,len(Y_pre)),Y_pred], delimiter=',', header = 'ImageId,Label', comments = '', fmt='%s')
 

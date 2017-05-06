@@ -73,8 +73,8 @@ W_conv1 = weight_varible([5, 5, 1, 32])
 b_conv1 = bias_variable([32])
 
 # conv layer-1
-x = tf.placeholder(tf.float32, [None, 20, 20])
-x_image = tf.reshape(x, [-1, 20, 20, 1])
+x = tf.placeholder(tf.float32, [None, 32, 32])
+x_image = tf.reshape(x, [-1, 32, 32, 1])
 
 h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
 h_pool1 = max_pool_2x2(h_conv1)
@@ -87,10 +87,10 @@ h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
 h_pool2 = max_pool_2x2(h_conv2)
 
 # full connection
-W_fc1 = weight_varible([5 * 5 * 64, 1024])
+W_fc1 = weight_varible([8 * 8 * 64, 1024])
 b_fc1 = bias_variable([1024])
 
-h_pool2_flat = tf.reshape(h_pool2, [-1, 5 * 5 * 64])
+h_pool2_flat = tf.reshape(h_pool2, [-1, 8 * 8 * 64])
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
 # dropout
@@ -130,6 +130,6 @@ print 'test accuracy %g' %(accuracy.eval(feed_dict={x:test, y_:Label[5500:], kee
 pre = y_conv.eval(feed_dict={x:X_pre, keep_prob:1.0})
 result = sess.run(tf.arg_max(pre, 1))
 result = map(int2label, result)
-df = pd.DataFrame(result, index=range(6284,len(result)+6284),columns=['Label'])
+df = pd.DataFrame(result, index=range(6284,len(result)+6284),columns=['Class'])
 df.to_csv('pic_submission.csv')
 
